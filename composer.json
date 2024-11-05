@@ -1,0 +1,19 @@
+{
+    "name": "tobento/js-cropper",
+    "type": "library",
+    "description": "Simple Image Cropper.",
+    "keywords": [
+        "tobento",
+        "image",
+        "cropper"
+    ],
+    "homepage": "https://www.tobento.ch",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Tobias Strub",
+            "email": "info@tobento.ch",
+            "homepage": "https://www.tobento.ch"
+        }
+    ]
+}
