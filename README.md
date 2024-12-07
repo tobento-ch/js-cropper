@@ -108,6 +108,7 @@ Instead of using the ```data-crop``` attribute to register the crop automaticall
 | ```"target"``` | ```[1200, 600]```, ```[1200]``` or ```[null, 600]``` | A target image width and/or height. (optional) |
 | ```"crop"``` | ```null``` | Crop data. (optional) |
 | ```"keep_ratio"``` | ```true``` or ```false``` | If to keep the image ratio. (optional) |
+| ```"scalable"``` | ```true``` or ```false``` | If to scale image using. (optional) |
 
 ### Methods
 
