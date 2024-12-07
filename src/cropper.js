@@ -94,7 +94,7 @@ const cropper = (function(window, document) {
             this.containerElCssBorderLeftWidth = 0;
             this.containerElCssBorderRightWidth = 0;
             this.containerElCssBorderTopWidth = 0;
-            this.containerElCssBorderBottomWidth = 0;    
+            this.containerElCssBorderBottomWidth = 0;
 
             // box data.
             this.boxStartW = 0;
@@ -106,6 +106,7 @@ const cropper = (function(window, document) {
             this.box = {w: 0, h: 0, x: 0, y: 0};
             this.scale = 1;
             this.scaled = false;
+            this.scalable = true;
             
             // active action
             this.actionEl = null;
@@ -147,6 +148,7 @@ const cropper = (function(window, document) {
             this.wheelEventEndTimeout = null;
             
             this.containerEl.addEventListener('wheel', (event) => {
+                if (!this.scalable) {return;}
                 event.preventDefault();
 
                 if (event.deltaY < 0) {
@@ -159,10 +161,10 @@ const cropper = (function(window, document) {
                 if (this.scale < 0.1) {
                     this.scale = 0.1;
                 }
-            
+
                 // Apply scale transform
                 this.imgEl.style.transform = 'scale('+this.scale+')';
-                
+
                 this.wheelEventEndTimeout = setTimeout(() => {
                     this.update();
                     this.fire('stopped', [event, this]);
@@ -219,20 +221,20 @@ const cropper = (function(window, document) {
                 this.keepRatio = (this.config['keep_ratio'] === false) ? false : true;
             }
             
-			// Ensure that image has loaded for getting right dimensions.
-			if ((this.imgEl.complete && this.imgEl.naturalHeight !== 0) === false) {
-				this.imgEl.addEventListener('load', () => {
+            // Ensure that image has loaded for getting right dimensions.
+            if ((this.imgEl.complete && this.imgEl.naturalHeight !== 0) === false) {
+                this.imgEl.addEventListener('load', () => {
                     this.scaled = false;
                     if (this.destroyed) { return; }
-					this.prepareData();
-					// if browser window gets resized, we should recall these function below to recaluclate the data.
-					this.prepareDataVary();
-				}, false);
-			} else {
-				this.prepareData();
-				// if browser window gets resized, we should recall these function below to recaluclate the data.
-				this.prepareDataVary();
-			}
+                    this.prepareData();
+                    // if browser window gets resized, we should recall these function below to recaluclate the data.
+                    this.prepareDataVary();
+                }, false);
+            } else {
+                this.prepareData();
+                // if browser window gets resized, we should recall these function below to recaluclate the data.
+                this.prepareDataVary();
+            }
         }
         destroy() {
             this.destroyed = true;
@@ -261,21 +263,26 @@ const cropper = (function(window, document) {
             if (typeof this.config['crop'] !== 'undefined') {
                 const crop = this.config['crop'];
                 if (typeof crop['width'] !== 'undefined') {
-                    this.box.w = parseInt(crop['width']);
+                    this.box.w = this.ensureInt(crop['width'], 0);
                 }                    
                 if (typeof crop['height'] !== 'undefined') {
-                    this.box.h = parseInt(crop['height']);
+                    this.box.h = this.ensureInt(crop['height'], 0);
                 }
                 if (typeof crop['x'] !== 'undefined') {
-                    this.box.x = parseInt(crop['x']);
+                    this.box.x = this.ensureInt(crop['x'], 0);
                 }    
                 if (typeof crop['y'] !== 'undefined') {
-                    this.box.y = parseInt(crop['y']);
+                    this.box.y = this.ensureInt(crop['y'], 0);
                 }
                 if (typeof crop['scale'] !== 'undefined') {
-                    this.scale = crop['scale'];
+                    this.scale = this.ensureFloat(crop['scale'], 1);
                     this.imgEl.style.transform = 'scale('+this.scale+')';
                 }
+            }
+            
+            // Can scale
+            if (typeof this.config['scalable'] !== 'undefined') {
+                this.scalable = this.config['scalable'] ? true : false;
             }
             
             // Determine the ratio
@@ -356,7 +363,7 @@ const cropper = (function(window, document) {
 
             // Check if crop area is not too small.
             if (this.box.w*this.imgElScale < this.targetW || this.box.h*this.imgElScale < this.targetH) {
-                this.renderMessage('The image quality may suffer as the crop area is too small!');
+                this.renderMessage('The image quality may suffer as the crop area is too small!', 'areaTooSmall');
             }
 
             // Check if img is not too small.
@@ -471,8 +478,8 @@ const cropper = (function(window, document) {
                 minSizeMax = Math.max(this.boxMinW, this.boxMinH),
                 calcCenter = false;
             
-            if (isFinite(w) === false) { w = this.imgElW; }
-            if (isFinite(h) === false) { h = this.imgElH; }
+            if (isFinite(w) === false || w === 0) { w = this.imgElW; }
+            if (isFinite(h) === false || h === 0) { h = this.imgElH; }
             if (isFinite(x) === false) { x = 0; }
             if (isFinite(y) === false) { y = 0; }
             
@@ -918,7 +925,7 @@ const cropper = (function(window, document) {
             }
             
             const div = document.createElement('div');
-            div.innerHTML = translator.trans(message);
+            div.textContent = translator.trans(message);
             div.setAttribute('class', 'crop-message');
             this.messagesEl.appendChild(div);
             this.messages[storeKey] = div;
@@ -935,6 +942,15 @@ const cropper = (function(window, document) {
                 el.parentNode.removeChild(el);
                 delete this.messages[storeKey];
             }
+        }
+        
+        ensureInt(value, fallback = 0) {
+            value = parseInt(value);
+            return Number.isNaN(value) ? fallback : value;
+        }
+        ensureFloat(value, fallback = 0) {
+            value = parseFloat(value);
+            return Number.isNaN(value) ? fallback : value;
         }
     }
 
